@@ -1,6 +1,7 @@
 # Product Requirements Document (PRD)
 
-# Sistem Pakar Diagnosa Tingkat Depresi Mahasiswa
+# Ruang Pulih
+### Sistem Pakar Deteksi Dini Tingkat Depresi Mahasiswa
 **Metode:** Forward Chaining & Certainty Factor (CF)
 
 **Versi Dokumen:** 2.0 (Elaborasi)
