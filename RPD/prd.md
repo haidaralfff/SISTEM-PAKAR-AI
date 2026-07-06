@@ -858,7 +858,7 @@ Response 200: { status: "ok", uptime, timestamp }
 
 ## 13. Struktur Folder
 
-### 13.1 Frontend
+### 13.1 client
 
 ```text
 src/
@@ -896,7 +896,7 @@ src/
 └── main.jsx
 ```
 
-### 13.2 Backend
+### 13.2 server
 
 ```text
 src/
