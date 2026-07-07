@@ -1,14 +1,22 @@
 import axios from 'axios'
 
+let accessToken = null
+
+export const setAccessToken = (token) => {
+  accessToken = token
+}
+
+export const getAccessToken = () => accessToken
+
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api',
   headers: { 'Content-Type': 'application/json' },
+  withCredentials: true,
 })
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('accessToken')
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
+  if (accessToken) {
+    config.headers.Authorization = `Bearer ${accessToken}`
   }
   return config
 })
@@ -20,12 +28,16 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true
       try {
-        const { data } = await axios.post('/api/auth/refresh', {}, { withCredentials: true })
-        localStorage.setItem('accessToken', data.accessToken)
+        const { data } = await axios.post(
+          `${api.defaults.baseURL}/auth/refresh`,
+          {},
+          { withCredentials: true }
+        )
+        setAccessToken(data.accessToken)
         originalRequest.headers.Authorization = `Bearer ${data.accessToken}`
         return api(originalRequest)
       } catch {
-        localStorage.removeItem('accessToken')
+        setAccessToken(null)
         window.location.href = '/login'
       }
     }

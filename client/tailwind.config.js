@@ -2,8 +2,66 @@
 export default {
   content: ["./src/**/*.{html,js,jsx}"],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        'stone-canvas': '#fafaf9',
+        'pure-white': '#ffffff',
+        'stone-border': '#e8e6e5',
+        'stone-muted': '#d6d3d1',
+        'ash-gray': '#a8a29e',
+        'warm-gray': '#78716c',
+        'ink-black': '#0c0a09',
+        'soot': '#1c1917',
+        'sky-wash': '#c1e1f7',
+        'cyan-signal': '#3ba6f1',
+        'cyan-edge': '#3398e1',
+      },
+      fontFamily: {
+        roboto: ['Roboto', 'sans-serif'],
+      },
+      fontSize: {
+        caption: ['10px', { lineHeight: '2.3' }],
+        'body-lg': ['16px', { lineHeight: '1.69', letterSpacing: '0.048px' }],
+        subheading: ['20px', { lineHeight: '1.2', letterSpacing: '-0.1px' }],
+        'heading-sm': ['32px', { lineHeight: '1.25', letterSpacing: '-0.8px' }],
+        display: ['52px', { lineHeight: '1.12', letterSpacing: '-1.092px' }],
+      },
+      spacing: {
+        4: '4px',
+        8: '8px',
+        12: '12px',
+        16: '16px',
+        24: '24px',
+        32: '32px',
+        40: '40px',
+        48: '48px',
+        64: '64px',
+        80: '80px',
+        96: '96px',
+        160: '160px',
+      },
+      borderRadius: {
+        md: '4px',
+        lg: '10px',
+        '2xl': '16px',
+        full: '9999px',
+        tags: '9999px',
+        cards: '10px',
+        icons: '4px',
+        inputs: '6px',
+        buttons: '9999px',
+        'feature-card': '16px',
+      },
+      boxShadow: {
+        md: 'rgba(0, 0, 0, 0.05) 0px 4px 16px 0px',
+        sm: 'rgba(0, 0, 0, 0.1) 0px 4px 6px -1px, rgba(0, 0, 0, 0.1) 0px 2px 4px -2px',
+        subtle: 'rgba(0, 0, 0, 0.05) 0px 1px 2px 0px',
+        xl: 'rgba(17, 12, 46, 0.12) 0px 12px 45px 0px',
+      },
+      maxWidth: {
+        page: '1200px',
+      },
+    },
   },
   plugins: [],
 }
-
