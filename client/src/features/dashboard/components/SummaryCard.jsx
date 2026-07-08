@@ -12,15 +12,35 @@ const SummaryCard = () => {
   const total = data?.data?.meta?.total ?? data?.data?.data?.length ?? 0
 
   return (
-    <Card sx={{ mb: 3 }}>
-      <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-        <PsychologyIcon sx={{ fontSize: 48, color: 'primary.main' }} />
+    <Card sx={{ borderRadius: '16px' }}>
+      <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 3 }}>
+        <Box
+          sx={{
+            width: 44,
+            height: 44,
+            borderRadius: '12px',
+            bgcolor: '#3ba6f114',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <PsychologyIcon sx={{ fontSize: 24, color: '#3ba6f1' }} />
+        </Box>
         <Box>
-          <Typography variant="h4" fontWeight={700}>
-            {isLoading ? <Skeleton width={40} /> : total}
+          <Typography
+            sx={{
+              fontFamily: '"Inter Tight Variable", sans-serif',
+              fontWeight: 600,
+              fontSize: 28,
+              color: '#0c0a09',
+              lineHeight: 1.2,
+            }}
+          >
+            {isLoading ? <Skeleton width={48} /> : total}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Konsultasi yang telah dilakukan
+          <Typography sx={{ color: '#78716c', fontFamily: '"Inter Variable", sans-serif', fontSize: 13 }}>
+            Total Konsultasi
           </Typography>
         </Box>
       </CardContent>

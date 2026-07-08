@@ -17,7 +17,8 @@ export default {
         'cyan-edge': '#3398e1',
       },
       fontFamily: {
-        roboto: ['Roboto', 'sans-serif'],
+        inter: ['Inter Variable', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
+        'inter-tight': ['Inter Tight Variable', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
       },
       fontSize: {
         caption: ['10px', { lineHeight: '2.3' }],

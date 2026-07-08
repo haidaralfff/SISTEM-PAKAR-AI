@@ -8,6 +8,6 @@ CREATE TABLE IF NOT EXISTS consultations (
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_consultations_user ON consultations(user_id);
-CREATE INDEX idx_consultations_created ON consultations(created_at);
-CREATE INDEX idx_consultations_disease ON consultations(disease_id);
+CREATE INDEX IF NOT EXISTS idx_consultations_user ON consultations(user_id);
+CREATE INDEX IF NOT EXISTS idx_consultations_created ON consultations(created_at);
+CREATE INDEX IF NOT EXISTS idx_consultations_disease ON consultations(disease_id);

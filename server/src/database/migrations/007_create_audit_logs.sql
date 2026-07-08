@@ -8,6 +8,6 @@ CREATE TABLE IF NOT EXISTS audit_logs (
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_audit_logs_actor ON audit_logs(actor_id);
-CREATE INDEX idx_audit_logs_entity ON audit_logs(entity);
-CREATE INDEX idx_audit_logs_created ON audit_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_actor ON audit_logs(actor_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_entity ON audit_logs(entity);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON audit_logs(created_at);

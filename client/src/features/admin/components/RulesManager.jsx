@@ -1,10 +1,5 @@
 import { useState } from 'react'
 import {
-  Table,
-  TableHead,
-  TableBody,
-  TableRow,
-  TableCell,
   Button,
   Dialog,
   DialogTitle,
@@ -21,27 +16,29 @@ import {
   IconButton,
   Chip,
   Typography,
-  List,
-  ListItem,
   ListItemText,
   Checkbox,
-  OutlinedInput,
   Card,
   CardContent,
+  Divider,
 } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import AddIcon from '@mui/icons-material/Add'
+import EditIcon from '@mui/icons-material/Edit'
 import HistoryIcon from '@mui/icons-material/History'
 import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getAdminRules, createRule, deleteRule } from '../api'
+import { getAdminRules, createRule, updateRule, deleteRule } from '../api'
 import { getSymptoms } from '../../symptoms/api'
 import { getAdminDiseases } from '../api'
+
+const emptyForm = { disease_id: '', symptom_ids: [], cf_expert: 0.8 }
 
 const RulesManager = () => {
   const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
-  const [form, setForm] = useState({ disease_id: '', symptom_ids: [], cf_expert: 0.8 })
+  const [editRule, setEditRule] = useState(null)
+  const [form, setForm] = useState(emptyForm)
   const [historyOpen, setHistoryOpen] = useState(false)
   const [selectedRule, setSelectedRule] = useState(null)
 
@@ -60,44 +57,75 @@ const RulesManager = () => {
     queryFn: () => getAdminDiseases(),
   })
 
-  const createMut = useMutation({
-    mutationFn: createRule,
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin', 'rules'] }); handleClose() },
-  })
+  const createMut = useMutation({ mutationFn: createRule })
+  const updateMut = useMutation({ mutationFn: ({ id, ...data }) => updateRule(id, data) })
+  const deleteMut = useMutation({ mutationFn: deleteRule })
 
-  const deleteMut = useMutation({
-    mutationFn: deleteRule,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'rules'] }),
-  })
+  const rules = rulesData?.data?.data || []
+  const symptoms = symptomsData?.data?.data || []
+  const diseases = diseasesData?.data?.data || []
 
-  const rules = rulesData?.data?.data || rulesData?.data || []
-  const symptoms = symptomsData?.data?.data || symptomsData?.data || []
-  const diseases = diseasesData?.data?.data || diseasesData?.data || []
+  const refreshRules = () => queryClient.invalidateQueries({ queryKey: ['admin', 'rules'] })
 
-  const handleClose = () => { setOpen(false); setForm({ disease_id: '', symptom_ids: [], cf_expert: 0.8 }) }
+  const handleClose = () => { setOpen(false); setEditRule(null); setForm(emptyForm) }
 
-  const handleSave = () => {
-    form.symptom_ids.forEach((sid) => {
-      createMut.mutate({ disease_id: form.disease_id, symptom_id: sid, cf_expert: parseFloat(form.cf_expert) })
-    })
+  const handleOpenCreate = () => {
+    setEditRule(null)
+    setForm(emptyForm)
+    setOpen(true)
   }
 
-  const getSymptomName = (id) => symptoms.find((s) => s.id === id)?.name || id
-  const getDiseaseName = (id) => diseases.find((d) => d.id === id)?.name || id
+  const handleOpenEdit = (rule) => {
+    setEditRule(rule)
+    setForm({ disease_id: rule.disease_id, symptom_ids: [rule.symptom_id], cf_expert: rule.cf_expert })
+    setOpen(true)
+  }
+
+  const handleSave = async () => {
+    if (editRule) {
+      updateMut.mutate(
+        { id: editRule.id, cf_expert: parseFloat(form.cf_expert) },
+        { onSuccess: () => { refreshRules(); handleClose() } },
+      )
+    } else {
+      try {
+        await Promise.all(
+          form.symptom_ids.map((sid) =>
+            createMut.mutateAsync({ disease_id: form.disease_id, symptom_id: sid, cf_expert: parseFloat(form.cf_expert) })
+          )
+        )
+        refreshRules()
+        handleClose()
+      } catch (e) {
+        // error handled by form-level alert
+      }
+    }
+  }
+
+  const getSymptom = (id) => symptoms.find((s) => s.id === id)
+  const getDisease = (id) => diseases.find((d) => d.id === id)
+  const getSymptomName = (id) => getSymptom(id)?.name || '(tidak ditemukan)'
+  const getDiseaseName = (id) => getDisease(id)?.name || '(tidak ditemukan)'
 
   const rulesByDisease = {}
   rules.forEach((r) => {
     if (!rulesByDisease[r.disease_id]) rulesByDisease[r.disease_id] = { diseaseName: getDiseaseName(r.disease_id), symptoms: [] }
-    rulesByDisease[r.disease_id].symptoms.push(getSymptomName(r.symptom_id))
+    const sym = getSymptom(r.symptom_id)
+    rulesByDisease[r.disease_id].symptoms.push({
+      rule: r,
+      name: sym?.name || '(tidak ditemukan)',
+      code: sym?.code || '',
+      cf: r.cf_expert,
+    })
   })
 
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={() => setOpen(true)}>Tambah Rule</Button>
+        <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenCreate}>Tambah Rule</Button>
       </Box>
 
-      {isLoading ? (
+      {isLoading || !symptomsData || !diseasesData ? (
         <Box>{[1, 2, 3].map((i) => <Skeleton key={i} height={50} sx={{ mb: 1 }} />)}</Box>
       ) : Object.keys(rulesByDisease).length === 0 ? (
         <Typography variant="body2" color="text.secondary">Belum ada rule. Tambah rule baru untuk memulai.</Typography>
@@ -111,11 +139,23 @@ const RulesManager = () => {
                   IF
                 </Typography>
                 {group.symptoms.map((s, i) => (
-                  <Typography key={i} variant="body2" sx={{ ml: 4 }}>
-                    {i === group.symptoms.length - 1 ? '└─' : '├─'} {s}
-                  </Typography>
+                  <Box key={i} sx={{ display: 'flex', alignItems: 'center', ml: 4, mb: 0.5, gap: 1 }}>
+                    <Typography variant="body2" sx={{ fontFamily: '"Inter Variable", sans-serif', color: '#0c0a09', flex: 1 }}>
+                      {i === group.symptoms.length - 1 ? '└─' : '├─'} {s.code ? `${s.code} — ` : ''}{s.name}
+                      <Chip label={`CF ${s.cf}`} size="small" variant="outlined" sx={{ ml: 1, height: 18, '& .MuiChip-label': { fontSize: 10, px: 0.5 } }} />
+                    </Typography>
+                    <IconButton size="small" onClick={() => handleOpenEdit(s.rule)} title="Edit CF" sx={{ color: '#78716c', '&:hover': { color: '#3ba6f1' } }}>
+                      <EditIcon sx={{ fontSize: 15 }} />
+                    </IconButton>
+                    <IconButton size="small" onClick={() => { setSelectedRule(s.rule); setHistoryOpen(true) }} title="Riwayat" sx={{ color: '#78716c', '&:hover': { color: '#3ba6f1' } }}>
+                      <HistoryIcon sx={{ fontSize: 15 }} />
+                    </IconButton>
+                    <IconButton size="small" onClick={() => deleteMut.mutate(s.rule.id, { onSuccess: refreshRules })} title="Hapus" sx={{ color: '#78716c', '&:hover': { color: '#ef4444' } }}>
+                      <DeleteIcon sx={{ fontSize: 15 }} />
+                    </IconButton>
+                  </Box>
                 ))}
-                <Typography variant="subtitle2" fontWeight={600} sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ mt: 1.5, display: 'flex', alignItems: 'center', gap: 1, fontFamily: '"Inter Tight Variable", sans-serif' }}>
                   THEN <Chip label={group.diseaseName} size="small" color="primary" />
                 </Typography>
               </CardContent>
@@ -124,85 +164,144 @@ const RulesManager = () => {
         </Box>
       )}
 
-      <Table size="small" sx={{ mt: 3 }}>
-        <TableHead>
-          <TableRow>
-            <TableCell>Gejala</TableCell>
-            <TableCell>Diagnosis</TableCell>
-            <TableCell>CF Pakar</TableCell>
-            <TableCell>Aksi</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {rules.map((r) => (
-            <TableRow key={r.id}>
-              <TableCell>{getSymptomName(r.symptom_id)}</TableCell>
-              <TableCell>{getDiseaseName(r.disease_id)}</TableCell>
-              <TableCell><Chip label={r.cf_expert} size="small" color="primary" variant="outlined" /></TableCell>
-              <TableCell>
-                <IconButton size="small" onClick={() => { setSelectedRule(r); setHistoryOpen(true) }} title="Riwayat Perubahan">
-                  <HistoryIcon fontSize="small" />
-                </IconButton>
-                <IconButton size="small" onClick={() => deleteMut.mutate(r.id)}><DeleteIcon fontSize="small" /></IconButton>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-
-      {createMut.error && (
-        <Alert severity="error" sx={{ mt: 2 }}>{createMut.error?.response?.data?.message}</Alert>
+      {(createMut.error || updateMut.error) && (
+        <Alert severity="error" sx={{ mt: 2 }}>{createMut.error?.response?.data?.message || updateMut.error?.response?.data?.message}</Alert>
       )}
 
       <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-        <DialogTitle>Tambah Rule</DialogTitle>
+        <DialogTitle>{editRule ? 'Edit Rule' : 'Tambah Rule'}</DialogTitle>
         <DialogContent>
-          <FormControl fullWidth margin="dense">
-            <InputLabel>Diagnosis</InputLabel>
-            <Select value={form.disease_id} label="Diagnosis" onChange={(e) => setForm({ ...form, disease_id: e.target.value })}>
-              {diseases.map((d) => (
-                <MenuItem key={d.id} value={d.id}>{d.code} - {d.name}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          <FormControl fullWidth margin="dense">
-            <InputLabel>Gejala (pilih satu atau lebih)</InputLabel>
+          <FormControl fullWidth margin="dense" disabled={!!editRule}>
+            <InputLabel id="disease-label">Diagnosis</InputLabel>
             <Select
-              multiple
-              value={form.symptom_ids}
-              label="Gejala (pilih satu atau lebih)"
-              onChange={(e) => setForm({ ...form, symptom_ids: e.target.value })}
-              input={<OutlinedInput label="Gejala (pilih satu atau lebih)" />}
-              renderValue={(selected) => selected.map((id) => symptoms.find((s) => s.id === id)?.name || id).join(', ')}
+              labelId="disease-label"
+              value={form.disease_id}
+              label="Diagnosis"
+              onChange={(e) => setForm({ ...form, disease_id: e.target.value })}
+              displayEmpty
+              renderValue={(selected) => {
+                if (!selected) return <Typography sx={{ color: '#a8a29e', fontSize: 14 }}>Pilih diagnosis...</Typography>
+                const d = diseases.find((d) => d.id === selected)
+                return d ? `${d.code} — ${d.name}` : selected
+              }}
             >
-              {symptoms.map((s) => (
-                <MenuItem key={s.id} value={s.id}>
-                  <Checkbox checked={form.symptom_ids.includes(s.id)} size="small" />
-                  <ListItemText primary={`${s.code} - ${s.name}`} />
+              {diseases.length === 0 && (
+                <MenuItem disabled value="">
+                  <Typography sx={{ color: '#a8a29e' }}>Tidak ada diagnosis tersedia</Typography>
+                </MenuItem>
+              )}
+              {diseases.map((d) => (
+                <MenuItem key={d.id} value={d.id} sx={{ py: 1 }}>
+                  <ListItemText
+                    primary={`${d.code} — ${d.name}`}
+                    primaryTypographyProps={{ fontSize: 13, fontFamily: '"Inter Variable", sans-serif' }}
+                  />
                 </MenuItem>
               ))}
             </Select>
           </FormControl>
 
-          <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-            Setiap gejala akan dibuat sebagai satu baris rule terpisah dengan diagnosis yang sama.
-          </Typography>
+          {!editRule && (
+            <>
+              <FormControl fullWidth margin="dense">
+                <InputLabel id="symptom-label">Gejala (pilih satu atau lebih)</InputLabel>
+                <Select
+                  labelId="symptom-label"
+                  multiple
+                  value={form.symptom_ids}
+                  label="Gejala (pilih satu atau lebih)"
+                  onChange={(e) => setForm({ ...form, symptom_ids: e.target.value })}
+                  displayEmpty
+                  renderValue={(selected) =>
+                    selected.length === 0 ? (
+                      <Typography sx={{ color: '#a8a29e', fontSize: 14 }}>Pilih gejala...</Typography>
+                    ) : (
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                        {selected.map((id) => {
+                          const sym = symptoms.find((s) => s.id === id)
+                          return <Chip key={id} label={sym?.name || id} size="small" sx={{ height: 22, fontSize: 11 }} />
+                        })}
+                      </Box>
+                    )
+                  }
+                >
+                  {symptoms.length === 0 && (
+                    <MenuItem disabled value="">
+                      <Typography sx={{ color: '#a8a29e' }}>Tidak ada gejala tersedia</Typography>
+                    </MenuItem>
+                  )}
+                  {symptoms.map((s) => (
+                    <MenuItem key={s.id} value={s.id} sx={{ py: 1 }}>
+                      <Checkbox checked={form.symptom_ids.includes(s.id)} size="small" sx={{ '&.Mui-checked': { color: '#3ba6f1' } }} />
+                      <ListItemText
+                        primary={`${s.code} — ${s.name}`}
+                        primaryTypographyProps={{ fontSize: 13, fontFamily: '"Inter Variable", sans-serif' }}
+                      />
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <Typography variant="caption" sx={{ color: '#a8a29e', mt: 1, display: 'block', fontFamily: '"Inter Variable", sans-serif' }}>
+                Setiap gejala akan dibuat sebagai satu baris rule terpisah dengan diagnosis yang sama.
+              </Typography>
+            </>
+          )}
+
+          {editRule && (
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 2, mb: 1 }}>
+              Mengubah CF Pakar untuk gejala <strong>{getSymptomName(editRule.symptom_id)}</strong> → <strong>{getDiseaseName(editRule.disease_id)}</strong>
+            </Typography>
+          )}
 
           <TextField
             label="CF Pakar (0.00 - 1.00)"
             type="number"
             fullWidth
             margin="dense"
-            inputProps={{ min: 0, max: 1, step: 0.1 }}
+            slotProps={{ htmlInput: { min: 0, max: 1, step: 0.1 } }}
             value={form.cf_expert}
             onChange={(e) => setForm({ ...form, cf_expert: e.target.value })}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '6px',
+                '& fieldset': { borderColor: '#e8e6e5' },
+                '&:hover fieldset': { borderColor: '#d6d3d1' },
+                '&.Mui-focused fieldset': { borderColor: '#3ba6f1' },
+              },
+              '& .MuiInputLabel-root': { fontFamily: '"Inter Variable", sans-serif' },
+              '& .MuiInputLabel-root.Mui-focused': { color: '#3ba6f1' },
+            }}
           />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Batal</Button>
-          <Button variant="contained" onClick={handleSave} disabled={!form.disease_id || form.symptom_ids.length === 0}>
-            Simpan {form.symptom_ids.length > 1 ? `${form.symptom_ids.length} Rule` : ''}
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={handleClose}
+            sx={{
+              borderRadius: '9999px',
+              textTransform: 'none',
+              fontFamily: '"Inter Variable", sans-serif',
+              borderColor: '#e8e6e5',
+              color: '#0c0a09',
+              '&:hover': { borderColor: '#d6d3d1', bgcolor: '#f5f5f4' },
+            }}
+          >
+            Batal
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleSave}
+            disabled={!form.disease_id || form.symptom_ids.length === 0 || createMut.isPending || updateMut.isPending}
+            sx={{
+              borderRadius: '9999px',
+              textTransform: 'none',
+              fontFamily: '"Inter Variable", sans-serif',
+              bgcolor: '#3ba6f1',
+              color: '#ffffff',
+              '&:hover': { bgcolor: '#3398e1' },
+            }}
+          >
+            Simpan
           </Button>
         </DialogActions>
       </Dialog>
@@ -223,30 +322,9 @@ const RulesManager = () => {
                 <Chip label={selectedRule.cf_expert} size="small" color="primary" variant="outlined" />
               </Typography>
               <Divider sx={{ my: 2 }} />
-              <Typography variant="caption" color="text.secondary">
-                Riwayat perubahan versi akan tersedia ketika backend menyediakan endpoint audit log.
+              <Typography variant="body2" color="text.secondary">
+                Riwayat perubahan dapat dilihat di tab <strong>Audit Log</strong> pada panel admin.
               </Typography>
-              <Table size="small" sx={{ mt: 2 }}>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Tanggal</TableCell>
-                    <TableCell>CF Lama</TableCell>
-                    <TableCell>CF Baru</TableCell>
-                    <TableCell>Diubah Oleh</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  <TableRow>
-                    <TableCell colSpan={4} align="center">
-                      <Typography variant="caption" color="text.secondary">
-                        {selectedRule.created_at
-                          ? `Dibuat: ${new Date(selectedRule.created_at).toLocaleDateString('id-ID')}`
-                          : 'Belum ada riwayat perubahan'}
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
             </Box>
           ) : (
             <Typography variant="body2" color="text.secondary">Tidak ada data rule.</Typography>

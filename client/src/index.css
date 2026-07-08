@@ -1,6 +1,5 @@
-@import '@fontsource/roboto/400.css';
-@import '@fontsource/roboto/500.css';
-@import '@fontsource/roboto/700.css';
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/inter-tight';
 
 @tailwind base;
 @tailwind components;
@@ -18,7 +17,8 @@
   --color-sky-wash: #c1e1f7;
   --color-cyan-signal: #3ba6f1;
   --color-cyan-edge: #3398e1;
-  --font-roboto: 'Roboto', sans-serif;
+  --font-inter: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-inter-tight: 'Inter Tight Variable', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --shadow-md: rgba(0, 0, 0, 0.05) 0px 4px 16px 0px;
   --shadow-xl: rgba(17, 12, 46, 0.12) 0px 12px 45px 0px;
 }
@@ -26,5 +26,7 @@
 body {
   margin: 0;
   background-color: var(--color-stone-canvas);
-  font-family: var(--font-roboto);
+  font-family: var(--font-inter);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }

@@ -19,3 +19,8 @@ export const deleteRule = (id) => api.delete(`/rules/${id}`)
 
 export const getAdminUsers = (params) => api.get('/admin/users', { params })
 export const deleteUser = (id) => api.delete(`/admin/users/${id}`)
+
+export const getAuditLogs = (params) => api.get('/admin/audit-logs', { params })
+export const getHighRiskIncidents = (params) => api.get('/admin/high-risk-incidents', { params })
+
+export const simulateConsultation = (data) => api.post('/admin/simulate', data)

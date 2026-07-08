@@ -3,10 +3,19 @@ const controller = require('../controllers/consultation.controller')
 const { authenticate } = require('../middleware/auth.middleware')
 const { validate } = require('../middleware/validate.middleware')
 const { submitConsultationSchema } = require('../validators/consultation.schema')
+const { z } = require('zod')
+
+const simulateSchema = z.object({
+  symptoms: z.array(z.object({
+    symptom_id: z.string().uuid(),
+    cf_user: z.number().min(0).max(1),
+  })).min(1, 'Minimal 1 gejala harus dipilih'),
+})
 
 const router = Router()
 
 router.post('/', authenticate, validate(submitConsultationSchema), controller.submit)
+router.post('/simulate', authenticate, validate(simulateSchema), controller.simulate)
 router.get('/history', authenticate, controller.getHistory)
 router.get('/:id', authenticate, controller.getDetail)
 router.delete('/:id', authenticate, controller.remove)

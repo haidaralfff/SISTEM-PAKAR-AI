@@ -104,6 +104,7 @@ const HistoryPage = () => {
                   onChange={(e) => setFilters({ ...filters, severity: e.target.value })}
                 >
                   <MenuItem value="">Semua</MenuItem>
+                  <MenuItem value="gangguan_mood">Gangguan Mood</MenuItem>
                   <MenuItem value="ringan">Ringan</MenuItem>
                   <MenuItem value="sedang">Sedang</MenuItem>
                   <MenuItem value="berat">Berat</MenuItem>
@@ -153,7 +154,7 @@ const HistoryPage = () => {
                   })}
                 />
                 <Chip
-                  label={`${((item.cf_result || 0) * 100).toFixed(1)}%`}
+                  label={`Keyakinan: ${((item.belief || 0) * 100).toFixed(1)}%`}
                   size="small"
                   color="primary"
                   variant="outlined"

@@ -28,6 +28,13 @@ const getAuditLogs = async (req, res, next) => {
   } catch (err) { next(err) }
 }
 
+const getHighRiskIncidents = async (req, res, next) => {
+  try {
+    const incidents = await adminService.getHighRiskIncidents(req.query.limit || 5)
+    res.json({ data: incidents })
+  } catch (err) { next(err) }
+}
+
 const getDashboardStats = async (req, res, next) => {
   try {
     const stats = await adminService.getDashboardStats(req.user.id)
@@ -35,4 +42,11 @@ const getDashboardStats = async (req, res, next) => {
   } catch (err) { next(err) }
 }
 
-module.exports = { getStatistics, getUsers, deleteUser, getAuditLogs, getDashboardStats }
+const simulate = async (req, res, next) => {
+  try {
+    const result = await adminService.simulate(req.validatedBody)
+    res.json(result)
+  } catch (err) { next(err) }
+}
+
+module.exports = { getStatistics, getUsers, deleteUser, getAuditLogs, getHighRiskIncidents, getDashboardStats, simulate }

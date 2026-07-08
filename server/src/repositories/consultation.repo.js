@@ -1,10 +1,10 @@
 const { query } = require('../config/database')
 
-const create = async ({ user_id, disease_id, result, cf_result, has_high_risk_flag }) => {
+const create = async ({ user_id, disease_id, result, belief, has_high_risk_flag }) => {
   const { rows } = await query(
-    `INSERT INTO consultations (user_id, disease_id, result, cf_result, has_high_risk_flag)
+    `INSERT INTO consultations (user_id, disease_id, result, belief, has_high_risk_flag)
      VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-    [user_id, disease_id, result, cf_result, has_high_risk_flag]
+    [user_id, disease_id, result, belief, has_high_risk_flag]
   )
   return rows[0]
 }
@@ -106,6 +106,19 @@ const countBySeverity = async () => {
   return rows
 }
 
+const findHighRisk = async (limit = 5) => {
+  const { rows } = await query(
+    `SELECT c.id, c.created_at, c.belief, d.name AS disease_name
+     FROM consultations c
+     JOIN diseases d ON d.id = c.disease_id
+     WHERE c.has_high_risk_flag = true
+     ORDER BY c.created_at DESC
+     LIMIT $1`,
+    [limit]
+  )
+  return rows
+}
+
 module.exports = {
-  create, addDetail, findByUser, countByUser, findById, findDetailsByConsultationId, remove, countAll, countBySeverity,
+  create, addDetail, findByUser, countByUser, findById, findDetailsByConsultationId, remove, countAll, countBySeverity, findHighRisk,
 }

@@ -5,4 +5,4 @@ CREATE TABLE IF NOT EXISTS consultation_details (
   cf_user DECIMAL(3,2) NOT NULL CHECK (cf_user >= 0 AND cf_user <= 1)
 );
 
-CREATE INDEX idx_consultation_details_consultation ON consultation_details(consultation_id);
+CREATE INDEX IF NOT EXISTS idx_consultation_details_consultation ON consultation_details(consultation_id);

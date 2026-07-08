@@ -2,8 +2,8 @@ const symptomService = require('../services/symptom.service')
 
 const list = async (req, res, next) => {
   try {
-    const symptoms = await symptomService.list(req.query)
-    res.json({ data: symptoms })
+    const result = await symptomService.list(req.query)
+    res.json(result)
   } catch (err) { next(err) }
 }
 
@@ -16,21 +16,21 @@ const getById = async (req, res, next) => {
 
 const create = async (req, res, next) => {
   try {
-    const symptom = await symptomService.create(req.validatedBody)
+    const symptom = await symptomService.create(req.validatedBody, req.user.id)
     res.status(201).json(symptom)
   } catch (err) { next(err) }
 }
 
 const update = async (req, res, next) => {
   try {
-    const symptom = await symptomService.update(req.params.id, req.validatedBody)
+    const symptom = await symptomService.update(req.params.id, req.validatedBody, req.user.id)
     res.json(symptom)
   } catch (err) { next(err) }
 }
 
 const remove = async (req, res, next) => {
   try {
-    const result = await symptomService.remove(req.params.id)
+    const result = await symptomService.remove(req.params.id, req.user.id)
     res.json(result)
   } catch (err) { next(err) }
 }

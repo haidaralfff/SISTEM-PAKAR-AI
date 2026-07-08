@@ -17,7 +17,7 @@ export function useLogin() {
     mutationFn: loginApi,
     onSuccess: ({ data }) => {
       setAuth(data.user, data.accessToken)
-      navigate(data.user.role === 'admin' ? '/admin' : '/')
+      navigate(data.user.role === 'admin' ? '/admin' : '/dashboard')
     },
   })
 }

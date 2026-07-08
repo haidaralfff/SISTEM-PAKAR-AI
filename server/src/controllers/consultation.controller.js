@@ -28,4 +28,11 @@ const remove = async (req, res, next) => {
   } catch (err) { next(err) }
 }
 
-module.exports = { submit, getHistory, getDetail, remove }
+const simulate = async (req, res, next) => {
+  try {
+    const result = await consultationService.simulate(req.validatedBody)
+    res.json(result)
+  } catch (err) { next(err) }
+}
+
+module.exports = { submit, getHistory, getDetail, remove, simulate }

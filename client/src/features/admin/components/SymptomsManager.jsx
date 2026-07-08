@@ -57,7 +57,7 @@ const SymptomsManager = () => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'symptoms'] }),
   })
 
-  const symptoms = data?.data?.data || data?.data || []
+  const symptoms = data?.data?.data || []
 
   const handleOpen = (item) => {
     if (item) {

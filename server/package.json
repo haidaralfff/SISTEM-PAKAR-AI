@@ -8,6 +8,7 @@
     "dev": "nodemon src/server.js",
     "migrate": "node src/database/migrate.js",
     "seed": "node src/database/seed.js",
+    "clear": "node -e \"const fs=require('fs'),{pool}=require('./src/config/database');(async()=>{const sql=fs.readFileSync('./src/database/clear.sql','utf-8');await pool.query(sql);console.log('Seed data cleared.\\nAdmin user (admin@ruangpulih.com) preserved.');process.exit(0)})().catch(e=>{console.error(e);process.exit(1)})\"",
     "test": "node --experimental-vm-modules node_modules/.bin/jest --forceExit --detectOpenHandles",
     "test:unit": "node --experimental-vm-modules node_modules/.bin/jest tests/unit --forceExit --detectOpenHandles",
     "test:integration": "node --experimental-vm-modules node_modules/.bin/jest tests/integration --forceExit --detectOpenHandles"
@@ -18,6 +19,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
+    "express-rate-limit": "^8.5.2",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",

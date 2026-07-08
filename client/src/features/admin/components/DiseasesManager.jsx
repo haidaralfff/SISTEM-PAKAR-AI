@@ -55,7 +55,7 @@ const DiseasesManager = () => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'diseases'] }),
   })
 
-  const diseases = data?.data?.data || data?.data || []
+  const diseases = data?.data?.data || []
 
   const handleOpen = (item) => {
     if (item) {
@@ -78,7 +78,8 @@ const DiseasesManager = () => {
   const severityColor = (level) => {
     if (level === 'berat') return 'error'
     if (level === 'sedang') return 'warning'
-    return 'success'
+    if (level === 'ringan') return 'success'
+    return 'info'
   }
 
   return (
@@ -127,8 +128,8 @@ const DiseasesManager = () => {
           <FormControl fullWidth margin="dense">
             <InputLabel>Tingkat Keparahan</InputLabel>
             <Select value={form.severity_level} label="Tingkat Keparahan" onChange={(e) => setForm({ ...form, severity_level: e.target.value })}>
-              {['ringan', 'sedang', 'berat'].map((l) => (
-                <MenuItem key={l} value={l}>{l.charAt(0).toUpperCase() + l.slice(1)}</MenuItem>
+              {['gangguan_mood', 'ringan', 'sedang', 'berat'].map((l) => (
+                <MenuItem key={l} value={l}>{l.charAt(0).toUpperCase() + l.slice(1).replace('_', ' ')}</MenuItem>
               ))}
             </Select>
           </FormControl>

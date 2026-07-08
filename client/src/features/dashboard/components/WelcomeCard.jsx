@@ -21,13 +21,19 @@ const WelcomeCard = () => {
   const quote = quotes[new Date().getDate() % quotes.length]
 
   return (
-    <Card className="mb-3 !border-0" sx={{ background: 'linear-gradient(135deg, #3ba6f1 0%, #60b5f0 100%)', color: 'white' }}>
+    <Card>
       <CardContent>
-        <Typography variant="h5" fontWeight={700} className="!text-white">
+        <Typography
+          variant="h4"
+          sx={{ fontWeight: 400, color: '#0c0a09', fontFamily: '"Inter Tight Variable", sans-serif', mb: 0.5 }}
+        >
           {getGreeting()}, {user?.name}!
         </Typography>
-        <Typography variant="body2" className="!text-white/90 italic mt-1">
-          "{quote}"
+        <Typography
+          variant="body2"
+          sx={{ fontStyle: 'italic', color: '#78716c', fontFamily: '"Inter Variable", sans-serif' }}
+        >
+          &ldquo;{quote}&rdquo;
         </Typography>
       </CardContent>
     </Card>

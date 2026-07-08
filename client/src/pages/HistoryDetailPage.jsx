@@ -23,6 +23,13 @@ import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined'
 import { useQuery } from '@tanstack/react-query'
 import { getConsultationDetail } from '../features/consultation/api'
 
+const severityColorMap = {
+  gangguan_mood: 'info',
+  ringan: 'success',
+  sedang: 'warning',
+  berat: 'error',
+}
+
 const HistoryDetailPage = () => {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -50,7 +57,7 @@ const HistoryDetailPage = () => {
   }
 
   const detail = data?.data || {}
-  const cfPercent = ((detail.cf_result || 0) * 100).toFixed(2)
+  const beliefPercent = ((detail.belief || 0) * 100).toFixed(2)
 
   return (
     <Box>
@@ -87,8 +94,8 @@ const HistoryDetailPage = () => {
               {detail.result || detail.disease_name}
             </Typography>
             <Chip
-              label={`Keyakinan: ${cfPercent}%`}
-              color={detail.cf_result >= 0.8 ? 'success' : detail.cf_result >= 0.5 ? 'warning' : 'default'}
+              label={`Keyakinan: ${beliefPercent}%`}
+              color={severityColorMap[detail.severity_level] || 'default'}
               sx={{ mt: 1 }}
             />
             {detail.severity_level && (
@@ -112,7 +119,7 @@ const HistoryDetailPage = () => {
                 <TableRow>
                   <TableCell>Gejala</TableCell>
                   <TableCell>Tingkat Keyakinan</TableCell>
-                  <TableCell>Nilai CF</TableCell>
+                  <TableCell>Bobot Keyakinan</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>

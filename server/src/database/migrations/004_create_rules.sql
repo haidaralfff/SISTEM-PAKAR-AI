@@ -8,5 +8,5 @@ CREATE TABLE IF NOT EXISTS rules (
   UNIQUE(disease_id, symptom_id)
 );
 
-CREATE INDEX idx_rules_disease ON rules(disease_id);
-CREATE INDEX idx_rules_symptom ON rules(symptom_id);
+CREATE INDEX IF NOT EXISTS idx_rules_disease ON rules(disease_id);
+CREATE INDEX IF NOT EXISTS idx_rules_symptom ON rules(symptom_id);

@@ -4,6 +4,7 @@ const diseaseRepo = require('../repositories/disease.repo')
 const ruleRepo = require('../repositories/rule.repo')
 const consultationRepo = require('../repositories/consultation.repo')
 const auditRepo = require('../repositories/audit.repo')
+const { diagnose } = require('../algorithms/dempsterShafer')
 const { createError } = require('../middleware/errorHandler.middleware')
 
 const getStatistics = async () => {
@@ -45,6 +46,10 @@ const getAuditLogs = async (queryParams) => {
   return auditRepo.findAll(queryParams)
 }
 
+const getHighRiskIncidents = async (limit = 5) => {
+  return consultationRepo.findHighRisk(limit)
+}
+
 const getDashboardStats = async (userId) => {
   const [totalConsultations, recentConsultations] = await Promise.all([
     consultationRepo.countByUser(userId),
@@ -53,4 +58,33 @@ const getDashboardStats = async (userId) => {
   return { total_consultations: totalConsultations, recent_consultations: recentConsultations }
 }
 
-module.exports = { getStatistics, getUsers, deleteUser, getAuditLogs, getDashboardStats }
+const simulate = async ({ symptoms }) => {
+  const rules = await ruleRepo.findAll()
+  if (rules.length === 0) {
+    throw createError(400, 'Belum ada rule yang dikonfigurasi.')
+  }
+
+  const results = diagnose(symptoms, rules)
+
+  // Enrich with disease info
+  const enriched = []
+  for (const r of results) {
+    const disease = await diseaseRepo.findById(r.disease_id)
+    enriched.push({
+      disease_id: r.disease_id,
+      disease_code: disease?.code || '',
+      disease_name: disease?.name || 'Unknown',
+      severity_level: disease?.severity_level || null,
+      belief: r.belief,
+      plausibility: r.plausibility,
+      uncertainty: r.uncertainty,
+      matched_count: r.matched_count,
+      total_conflict: r.total_conflict,
+      steps: r.steps,
+    })
+  }
+
+  return { results: enriched }
+}
+
+module.exports = { getStatistics, getUsers, deleteUser, getAuditLogs, getHighRiskIncidents, getDashboardStats, simulate }
